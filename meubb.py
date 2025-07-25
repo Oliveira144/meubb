@@ -18,6 +18,9 @@ if 'analysis' not in st.session_state:
         'recommendation': 'watch'
     }
 
+# Mapeamento para emoji
+emoji_map = {'C': '🔴', 'V': '🔵', 'E': '🟡'}
+
 # Função para adicionar resultado
 def add_result(result):
     st.session_state.history.append({'result': result, 'timestamp': time.time()})
@@ -41,7 +44,7 @@ def analyze_data():
     if len(data) < 3:
         return
 
-    recent = data[-27:]  # últimas 3 linhas (27 resultados)
+    recent = data[-27:]  # últimas 3 linhas
     patterns = detect_patterns(recent)
     riskLevel = assess_risk(recent)
     manipulation = detect_manipulation(recent)
@@ -193,14 +196,16 @@ with col1:
         max_results = 90
         recent_history = st.session_state.history[-max_results:][::-1]
 
+        # Exibir em linhas horizontais
+        lines = []
         for i in range(0, len(recent_history), 9):
             row = recent_history[i:i+9]
-            cols = st.columns(9)
-            for idx, result in enumerate(row):
-                color = result['result']
-                bg = "#ff4d4d" if color == 'C' else "#4d79ff" if color == 'V' else "#ffeb3b"
-                text_color = "black" if color == 'E' else "white"
-                cols[idx].markdown(f"<div style='background:{bg};color:{text_color};text-align:center;padding:10px;border-radius:8px;font-weight:bold'>{color}</div>", unsafe_allow_html=True)
+            emojis = [emoji_map[r['result']] for r in row]
+            lines.append(" ".join(emojis))
+
+        # Mostrar todas as linhas
+        for line in lines:
+            st.markdown(f"**{line}**")
     else:
         st.info("Nenhum resultado inserido ainda.")
 
@@ -211,7 +216,7 @@ with col2:
     st.write("**Risco:**", analysis['riskLevel'])
     st.write("**Manipulação:**", analysis['manipulation'])
 
-    st.write("**Previsão:**", analysis['prediction'] if analysis['prediction'] else "Aguardando...")
+    st.write("**Previsão:**", emoji_map.get(analysis['prediction'], "Aguardando..."))
     st.write("**Confiança:**", f"{analysis['confidence']}%")
     st.write("**Recomendação:**", analysis['recommendation'])
 
